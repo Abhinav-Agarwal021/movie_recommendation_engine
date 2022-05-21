@@ -3,8 +3,6 @@ const otpService = require('../Services/otpService');
 const TokenService = require('../Services/TokenService');
 const UserService = require('../Services/UserService');
 const userDto = require("../dtos/userDto")
-// const Jimp = require('jimp')
-// const path = require('path');
 
 class AuthController {
 
@@ -101,18 +99,6 @@ class AuthController {
         if (!fullName) {
             res.status(400).json({ message: "All fields are required" })
         }
-        // if (avatar) {
-        //     const buffer = Buffer.from(avatar?.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''), 'base64')
-
-        //     const imagePath = `${Date.now()}-${Math.round(
-        //         Math.random() * 1e9
-        //     )}.png`;
-
-        //     const jimResp = await Jimp.read(buffer);
-        //     jimResp
-        //         .resize(150, Jimp.AUTO)
-        //         .write(path.resolve(__dirname, `../userImages/${imagePath}`));
-        // }
 
         const userId = req.user._id;
 
