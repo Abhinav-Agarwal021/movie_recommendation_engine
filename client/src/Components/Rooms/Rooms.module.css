@@ -71,13 +71,25 @@
   transform: translateY(-7px);
 }
 
-.roomList {
+.tr__movies {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  margin-top: 60px;
+  margin-top: 30px;
   justify-content: flex-start;
   align-items: center;
+}
+
+.movie__desc{
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.trending{
+  margin-top: 60px;
 }
 
 .searchBox > img {
@@ -96,4 +108,13 @@
 .go__back__icon {
   width: 25px;
   height: 15px;
+}
+
+.movie__name{
+  font-size: medium;
+  font-weight: bold;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

@@ -9,6 +9,8 @@ import { Rooms } from "./Components/Rooms/Rooms"
 import { useSelector } from "react-redux"
 import { useLoading } from "./hooks/useLoading"
 import { Loader } from './Shared Components/Loader/Loader';
+import { SearchAMovie } from './Components/SearchAMovie/SearchAMovie';
+import { MoviePage } from './Components/Moviepage/MoviePage';
 
 function App() {
 
@@ -35,19 +37,14 @@ function App() {
           <Navbar />
           <Rooms />
         </Protected>
-        {/* <Protected path="/dms">
+        <Protected path="/search">
           <Navbar />
-          <Rooms dm={true} />
+          <SearchAMovie />
         </Protected>
-        <Protected path="/chat/:id">
-          <Chat />
+        <Protected path="/movie/:type/:name">
+          <Navbar />
+          <MoviePage />
         </Protected>
-        <Protected path="/grp/:id">
-          <GrpChat />
-        </Protected>
-        <Protected path="/settings/:id">
-          <GrpSettings />
-        </Protected> */}
       </Switch>
     </BrowserRouter>
   );
