@@ -36,6 +36,10 @@ export const Rooms = (props) => {
         history.push('/search')
     }
 
+    const handleMovie = (movie) => {
+        history.push(`/movie/MovieName/${movie}`)
+    }
+
 
     if (loading) return <Loader message="Loading! please wait....." />
     return (
@@ -66,7 +70,7 @@ export const Rooms = (props) => {
                     <div className={styles.tr__movies}>
                         {
                             trendingMovies?.map((movie, i) =>
-                                <div key={i} className={styles.movie__desc}>
+                                <div key={i} className={styles.movie__desc} onClick={() => handleMovie(movie[0])}>
                                     <div className={styles.movie__name}> {movie[0]}</div>
                                     <img src={movie[1]} alt={movie[0]} />
                                 </div>

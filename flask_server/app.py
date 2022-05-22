@@ -25,6 +25,13 @@ def fetch_poster(id):
     return "https://image.tmdb.org/t/p/original"+data['poster_path']
 
 
+def fetch_data(id):
+    response = requests.get(
+        'https://api.themoviedb.org/3/movie/{}?api_key=b9ec5e8b8967e08b92c6c78bb89768dd'.format(id))
+    data = response.json()
+    return data
+
+
 @app.route('/api/')
 def index():
     return ('Hey!!')
@@ -49,7 +56,7 @@ def recommend():
     return rmovies
 
 
-@app.route('/api/recommendDirector',methods=["POST"])
+@app.route('/api/recommendDirector', methods=["POST"])
 @cross_origin()
 def recommendUsingDirectors():
     data = request.get_json()
@@ -69,7 +76,7 @@ def recommendUsingDirectors():
     return rmovies
 
 
-@app.route('/api/recommendCast',methods=["POST"])
+@app.route('/api/recommendCast', methods=["POST"])
 @cross_origin()
 def recommendUsingCast():
     data = request.get_json()
@@ -89,7 +96,7 @@ def recommendUsingCast():
     return rmovies
 
 
-@app.route('/api/recommendGenres',methods=["POST"])
+@app.route('/api/recommendGenres', methods=["POST"])
 @cross_origin()
 def recommendUsingGenre():
     data = request.get_json()
@@ -110,7 +117,6 @@ def recommendUsingGenre():
                 counter += 1
     rmovies = json.dumps(recommended_movies)
     return rmovies
-    
 
 
 @app.route('/api/trending', methods=["GET"])
@@ -127,6 +133,15 @@ def trending():
             counter += 1
     rmovies = json.dumps(trending_movies)
     return rmovies
+
+
+@app.route('/api/movieDesc', methods=["POST"])
+@cross_origin()
+def getMovieDesc():
+    data = request.get_json()
+    movie = data["movie"]
+    movie_det = movies_data[movies_data['title'] == movie].iloc[0].movie_id
+    return fetch_data(movie_det)
 
 
 @app.route('/api/all_movies', methods=["GET"])

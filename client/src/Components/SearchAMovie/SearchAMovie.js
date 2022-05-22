@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import styles from './SearchAMovie.module.css'
 import Select, { createFilter } from 'react-select'
 import { getAllcharaceters, getAlldirectors, getAllgenres, getAllmovies } from '../../http/Flask_http'
+import { MdKeyboardBackspace } from "react-icons/md";
 import { useHistory } from 'react-router-dom';
 
 export const SearchAMovie = () => {
@@ -56,7 +57,11 @@ export const SearchAMovie = () => {
     }
 
     const handleRecommend = () => {
-        history.push(`/movie/${type.value}/${name.value}`)
+        history.push(`/movie/${type.value.replace(" ", "")}/${name.value}`)
+    }
+
+    const handleBack = () => {
+        history.goBack();
     }
 
     const customStyles = {
@@ -112,7 +117,12 @@ export const SearchAMovie = () => {
     return (
         <div className="container">
             <div className={styles.search}>
-                <span className={styles.heading}>Select a Type on which you want to search a movie</span>
+                <div className={styles.left}>
+                    <span className={styles.go__back} onClick={handleBack} >
+                        <MdKeyboardBackspace className={styles.go__back__icon} />
+                    </span>
+                    <span className={styles.heading}>Select a Type on which you want to search a movie</span>
+                </div>
                 <Select onChange={handleType} styles={customStyles} autoFocus={true} className={styles.dropdown} options={items} />
                 {type && <>
                     <span className={styles.heading}>Name you want to search by</span>
