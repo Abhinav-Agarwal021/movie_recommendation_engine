@@ -78,7 +78,7 @@ Agile scrum methodology is a project management system that relies on incrementa
 Microsoft assigned us three sprints of 1-2 weeks each: <strong>Design, Build, and Adopt.</strong><br><br>
 In the <strong>first two weeks</strong>, I evaluated problem statement and started researching about Movie recommendation engine.
 
-In the <strong>third and fourth week</strong>, I worked on Content based Recommendation engine and completed it giving recommendation on the basis of movie name and genre, cast and Director name. <br>
+In the <strong>third and fourth week</strong>, I worked on Content based Recommendation engine and completed it giving recommendation on the basis of movie name and genre, cast and Director name. <br><br> Repo link for content based recommendation engine: https://github.com/Abhinav-Agarwal021/Content_based_recommendation <br>
 
 In the <strong>last week</strong>, I decided to do better my algorithm or using better functions to recommend movies and implemented hybrid Recommended engine which give different movie recommendations on different user ratings on the movies. <br><br>
   
