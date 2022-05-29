@@ -6,6 +6,7 @@ const userSchema = new Schema(
         phone: { type: String, required: true },
         name: { type: String, required: false, unique: true },
         activated: { type: Boolean, required: false, default: false },
+        userId: { type: Number, required: true },
     },
     {
         timestamps: true,

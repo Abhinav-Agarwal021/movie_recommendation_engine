@@ -65,8 +65,8 @@ def index():
 def recommend():
     data = request.get_json()
     movie = data["movie"]
-    # user = data['userId']
-    user = 1
+    user = data['userId']
+    # user = 1
     idx = indics[movie]
     sim_scores = list(enumerate(cosine_sim[int(idx)]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)

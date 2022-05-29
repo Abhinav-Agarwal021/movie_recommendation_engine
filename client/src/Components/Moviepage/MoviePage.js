@@ -3,11 +3,14 @@ import { movieDesc, recommend, recommendCast, recommendDirector, recommendGenres
 import { Loader } from "../../Shared Components/Loader/Loader"
 import { useHistory } from 'react-router-dom';
 import { MdKeyboardBackspace } from "react-icons/md";
+import { useSelector } from 'react-redux';
 import styles from './MoviePage.module.css'
 
 export const MoviePage = () => {
 
     const history = useHistory();
+
+    const { user } = useSelector((state) => state.user);
 
     const [mname, setMname] = useState()
     const [mType, setMType] = useState()
@@ -77,7 +80,7 @@ export const MoviePage = () => {
                 try {
                     const movieDet = await movieDesc({ movie: mname })
                     setMovieDes(movieDet.data)
-                    const rmovies = await recommend({ movie: mname })
+                    const rmovies = await recommend({ movie: mname, userId: user.userId })
                     setRecommendedMovies(rmovies.data)
                 } catch (error) {
                     console.log(error)
@@ -87,7 +90,7 @@ export const MoviePage = () => {
             }
             recommendMovies()
         }
-    }, [mType, mname])
+    }, [mType, mname, user])
 
     const handleBack = () => {
         history.goBack();

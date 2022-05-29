@@ -2,6 +2,7 @@ const HashService = require('../Services/HashService');
 const otpService = require('../Services/otpService');
 const TokenService = require('../Services/TokenService');
 const UserService = require('../Services/UserService');
+const crypto = require('crypto');
 const userDto = require("../dtos/userDto")
 
 class AuthController {
@@ -67,7 +68,7 @@ class AuthController {
         try {
             user = await UserService.findUser({ phone })
             if (!user) {
-                user = await UserService.createUser({ phone })
+                user = await UserService.createUser({ phone, userId: crypto.randomInt(1, 670) })
             }
         } catch (error) {
             console.log(error)
