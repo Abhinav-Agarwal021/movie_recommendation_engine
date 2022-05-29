@@ -2,6 +2,9 @@ from flask import Flask, request
 from flask_cors import CORS, cross_origin
 import json
 import pickle
+import numpy as np
+from surprise import Reader, Dataset, SVD
+from surprise.model_selection import cross_validate
 import pandas as pd
 import requests
 
@@ -10,19 +13,39 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-movies_list = pickle.load((open('movies_dict.pkl', 'rb')))
-movies = pd.DataFrame(movies_list)
-original_movies_list = pickle.load((open('movies_original_dict.pkl', 'rb')))
-movies_data = pd.DataFrame(original_movies_list)
+movie_list = pickle.load(open('hybrid_list.pkl', 'rb'))
+movies = pd.DataFrame(movie_list)
+index_list = pickle.load(open('indices.pkl', 'rb'))
+indics = pd.DataFrame([index_list])
+index_map_list = pickle.load(open('indices_map.pkl', 'rb'))
+indices_map = pd.DataFrame(index_map_list)
+total_movie_list = pickle.load(open('movie_dict.pkl', 'rb'))
+tmovies = pd.DataFrame(total_movie_list)
+rating_list = pickle.load(open('ratings.pkl', 'rb'))
+rating = pd.DataFrame(rating_list)
+genre_list = pickle.load(open('genre_data.pkl', 'rb'))
+gen_smd = pd.DataFrame(genre_list)
+cast_list = pickle.load(open('cast_data.pkl', 'rb'))
+cast_smd = pd.DataFrame(cast_list)
 
 cosine_sim = pickle.load((open('similarity.pkl', 'rb')))
+
+reader = Reader()
+data = Dataset.load_from_df(rating[['userId', 'movieId', 'rating']], reader)
+svd = SVD()
+cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=10, verbose=True)
+trainset = data.build_full_trainset()
+svd.fit(trainset)
 
 
 def fetch_poster(id):
     response = requests.get(
         'https://api.themoviedb.org/3/movie/{}?api_key=b9ec5e8b8967e08b92c6c78bb89768dd'.format(id))
     data = response.json()
-    return "https://image.tmdb.org/t/p/original"+data['poster_path']
+    if data['poster_path']:
+        return "https://image.tmdb.org/t/p/original"+data['poster_path']
+    else:
+        return ""
 
 
 def fetch_data(id):
@@ -42,79 +65,96 @@ def index():
 def recommend():
     data = request.get_json()
     movie = data["movie"]
-    movie_index = movies[movies['title'] == movie].index[0]
-    distances = cosine_sim[movie_index]
-    movie_list = sorted(list(enumerate(distances)),
-                        reverse=True, key=lambda x: x[1])[1:11]
+    # user = data['userId']
+    user = 1
+    idx = indics[movie]
+    sim_scores = list(enumerate(cosine_sim[int(idx)]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:26]
+    movie_indices = [i[0] for i in sim_scores]
 
+    movies = tmovies.iloc[movie_indices][[
+        'title', 'vote_count', 'vote_average', 'year', 'id']]
+    movies['est'] = movies['id'].apply(lambda x: svd.predict(
+        user, indices_map.loc[x]['movieId']).est)
+    movies = movies.sort_values('est', ascending=False)
     recommended_movies = []
-    for i in movie_list:
-        movie_id = (movies.iloc[i[0]].movie_id)
-        recommended_movies.append(
-            (movies.iloc[i[0]].title, fetch_poster(movie_id)))
-    rmovies = json.dumps(recommended_movies)
-    return rmovies
-
-
-@app.route('/api/recommendDirector', methods=["POST"])
-@cross_origin()
-def recommendUsingDirectors():
-    data = request.get_json()
-    Director = data["Director"]
-    Director = Director.replace(" ", "")
-    movie_list = movies.sort_values('score', ascending=False)
-    director_list = list(enumerate(movie_list['crew']))
-
-    recommended_movies = []
-
-    for i in director_list:
-        if Director in i[1]:
-            movie_id = (movie_list.iloc[i[0]].movie_id)
+    counter = 0
+    for i in range(len(movies)):
+        if counter != 10:
             recommended_movies.append(
-                (movie_list.iloc[i[0]].title, fetch_poster(movie_id)))
+                (movies.iloc[i].title, fetch_poster(movies.iloc[i].id)))
+            counter += 1
     rmovies = json.dumps(recommended_movies)
     return rmovies
 
 
-@app.route('/api/recommendCast', methods=["POST"])
-@cross_origin()
-def recommendUsingCast():
-    data = request.get_json()
-    character = data["character"]
-    character = character.replace(" ", "")
-    movie_list = movies.sort_values('score', ascending=False)
-    actors_list = list(enumerate(movie_list['cast']))
+# @app.route('/api/recommendCast', methods=["POST"])
+# @cross_origin()
+# def recommendUsingCast():
+#     percentile_check = 0.10
+#     data = request.get_json()
+#     cast = data["cast"]
+#     dfs = cast_smd[cast_smd['cast'] == cast]
+#     vote_count = dfs[dfs['vote_count'].notnull()]['vote_count'].astype('int')
+#     vote_average = dfs[dfs['vote_average'].notnull()
+#                        ]['vote_average'].astype('int')
+#     C = vote_average.mean()
+#     m = vote_count.quantile(percentile_check)
 
-    recommended_movies = []
+#     qualified_data = dfs[(dfs['vote_count'] >= m) & (dfs['vote_count'].notnull()) & (
+#         dfs['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity']]
+#     qualified_data['vote_count'] = qualified_data['vote_count'].astype('int')
+#     qualified_data['vote_average'] = qualified_data['vote_average'].astype(
+#         'int')
 
-    for i in actors_list:
-        if character in i[1]:
-            movie_id = (movie_list.iloc[i[0]].movie_id)
-            recommended_movies.append(
-                (movie_list.iloc[i[0]].title, fetch_poster(movie_id)))
-    rmovies = json.dumps(recommended_movies)
-    return rmovies
+#     qualified_data['wr'] = qualified_data.apply(lambda x: (
+#         x['vote_count']/(x['vote_count']+m) * x['vote_average']) + (m/(m+x['vote_count']) * C), axis=1)
+#     qualified_data = qualified_data.sort_values('wr', ascending=False)
+#     qualified_data.shape()
+
+#     counter = 0
+#     recommended_movies = []
+
+#     for i in range(len(qualified_data)):
+#         if counter != 10:
+#             recommended_movies.append(
+#                 (qualified_data.iloc[i].title))
+#             counter += 1
+#     rmovies = json.dumps(recommended_movies)
+#     return rmovies
 
 
 @app.route('/api/recommendGenres', methods=["POST"])
 @cross_origin()
 def recommendUsingGenre():
+    percentile = 0.85
     data = request.get_json()
     genre = data["genre"]
-    genre = genre.replace(" ", "")
-    movie_list = movies.sort_values('score', ascending=False)
-    genres_list = list(enumerate(movie_list['genres']))
+    df = gen_smd[gen_smd['genre'] == genre]
+    vote_counts = df[df['vote_count'].notnull()]['vote_count'].astype('int')
+    vote_averages = df[df['vote_average'].notnull()
+                       ]['vote_average'].astype('int')
+    C = vote_averages.mean()
+    m = vote_counts.quantile(percentile)
+
+    qualified = df[(df['vote_count'] >= m) & (df['vote_count'].notnull()) & (
+        df['vote_average'].notnull())][['title', 'year', 'vote_count', 'vote_average', 'popularity', 'id']]
+    qualified['vote_count'] = qualified['vote_count'].astype('int')
+    qualified['vote_average'] = qualified['vote_average'].astype('int')
+
+    qualified['wr'] = qualified.apply(lambda x: (
+        x['vote_count']/(x['vote_count']+m) * x['vote_average']) + (m/(m+x['vote_count']) * C), axis=1)
+    qualified = qualified.sort_values('wr', ascending=False)
 
     counter = 0
     recommended_movies = []
 
-    for i in genres_list:
-        if genre in i[1]:
-            if counter != 10:
-                movie_id = (movie_list.iloc[i[0]].movie_id)
-                recommended_movies.append(
-                    (movie_list.iloc[i[0]].title, fetch_poster(movie_id)))
-                counter += 1
+    for i in range(len(qualified)):
+        if counter != 10:
+            recommended_movies.append(
+                (qualified.iloc[i].title, fetch_poster(qualified.iloc[i].id)))
+            counter += 1
     rmovies = json.dumps(recommended_movies)
     return rmovies
 
@@ -122,12 +162,12 @@ def recommendUsingGenre():
 @app.route('/api/trending', methods=["GET"])
 @cross_origin()
 def trending():
-    movie_list = movies.sort_values('popularity', ascending=False)
+    movie_list = tmovies.sort_values('popularity', ascending=False)
     counter = 0
     trending_movies = []
     for i in range(len(movie_list)):
         if counter != 10:
-            movie_id = (movie_list.iloc[i].movie_id)
+            movie_id = (movie_list.iloc[i].id)
             trending_movies.append(
                 (movie_list.iloc[i].title, fetch_poster(movie_id)))
             counter += 1
@@ -140,7 +180,7 @@ def trending():
 def getMovieDesc():
     data = request.get_json()
     movie = data["movie"]
-    movie_det = movies_data[movies_data['title'] == movie].iloc[0].movie_id
+    movie_det = tmovies[tmovies['title'] == movie].iloc[0].id
     return fetch_data(movie_det)
 
 
@@ -148,33 +188,9 @@ def getMovieDesc():
 @cross_origin()
 def allMovies():
     all_movies = []
-    for i in range(len(movies)):
-        all_movies.append(movies.iloc[i].title)
+    for i in range(len(tmovies)):
+        all_movies.append(tmovies.iloc[i].title)
     rmovies = json.dumps(all_movies)
-    return rmovies
-
-
-@app.route('/api/all_directors', methods=["GET"])
-@cross_origin()
-def allDirectors():
-    directors = []
-    for i in movies_data['crew']:
-        for j in i:
-            directors.append(j)
-    directors = list(dict.fromkeys(directors))
-    rmovies = json.dumps(directors)
-    return rmovies
-
-
-@app.route('/api/all_cast', methods=["GET"])
-@cross_origin()
-def allCharacters():
-    actors = []
-    for i in movies_data['cast']:
-        for j in i:
-            actors.append(j)
-    actors = list(dict.fromkeys(actors))
-    rmovies = json.dumps(actors)
     return rmovies
 
 
@@ -182,11 +198,11 @@ def allCharacters():
 @cross_origin()
 def allGenre():
     genre = []
-    for i in movies_data['genres']:
-        for j in i:
-            genre.append(j)
+    for i in gen_smd['genre']:
+        genre.append(i)
     genre = list(dict.fromkeys(genre))
-    rmovies = json.dumps(genre)
+    l = [x for x in genre if ~np.isnan(x)]
+    rmovies = json.dumps(l)
     return rmovies
 
 

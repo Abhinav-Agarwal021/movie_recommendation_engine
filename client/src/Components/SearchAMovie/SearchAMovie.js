@@ -10,22 +10,30 @@ export const SearchAMovie = () => {
     const history = useHistory();
 
     const [type, setType] = useState()
+    const [loading, setLoading] = useState(false)
     const [name, setName] = useState()
     const [moviesData, setMoviesData] = useState()
-    const [directors, setDirectors] = useState()
-    const [characters, setCharacters] = useState()
-    const [genres, setGenres] = useState()
+    // const [directors, setDirectors] = useState()
+    // const [characters, setCharacters] = useState()
+    // const [genres, setGenres] = useState()
 
     useEffect(() => {
         const getmovies = async () => {
-            const dat = await getAllmovies();
-            setMoviesData(dat.data);
-            const director = await getAlldirectors();
-            setDirectors(director.data);
-            const character = await getAllcharaceters();
-            setCharacters(character.data);
-            const genre = await getAllgenres();
-            setGenres(genre.data);
+            setLoading(true);
+            try {
+                const dat = await getAllmovies();
+                setMoviesData(dat.data);
+            } catch (error) {
+                console.log(error)
+            } finally {
+                setLoading(false)
+            }
+            // const director = await getAlldirectors();
+            // setDirectors(director.data);
+            // const character = await getAllcharaceters();
+            // setCharacters(character.data);
+            // const genre = await getAllgenres();
+            // setGenres(genre.data);
         }
         getmovies()
     }, [])
@@ -34,18 +42,18 @@ export const SearchAMovie = () => {
     moviesData?.forEach(movie => {
         movie_list.push({ label: movie, value: movie })
     });
-    var director_list = []
-    directors?.forEach(movie => {
-        director_list.push({ label: movie, value: movie })
-    });
-    var character_list = []
-    characters?.forEach(movie => {
-        character_list.push({ label: movie, value: movie })
-    });
-    var genre_list = []
-    genres?.forEach(movie => {
-        genre_list.push({ label: movie, value: movie })
-    });
+    // var director_list = []
+    // directors?.forEach(movie => {
+    //     director_list.push({ label: movie, value: movie })
+    // });
+    // var character_list = []
+    // characters?.forEach(movie => {
+    //     character_list.push({ label: movie, value: movie })
+    // });
+    // var genre_list = []
+    // genres?.forEach(movie => {
+    //     genre_list.push({ label: movie, value: movie })
+    // });
 
 
     const handleType = (selectedOption) => {
@@ -97,22 +105,22 @@ export const SearchAMovie = () => {
     }
 
     const [items] = useState([
-        {
-            label: "Genres",
-            value: "Genres"
-        },
+        // {
+        //     label: "Genres",
+        //     value: "Genres"
+        // },
         {
             label: "Movie Name",
             value: "Movie Name"
         },
-        {
-            label: "Director",
-            value: "Director"
-        },
-        {
-            label: "Movie Character",
-            value: "Movie Character"
-        },
+        // {
+        //     label: "Director",
+        //     value: "Director"
+        // },
+        // {
+        //     label: "Movie Character",
+        //     value: "Movie Character"
+        // },
     ])
     return (
         <div className="container">
@@ -126,7 +134,9 @@ export const SearchAMovie = () => {
                 <Select onChange={handleType} styles={customStyles} autoFocus={true} className={styles.dropdown} options={items} />
                 {type && <>
                     <span className={styles.heading}>Name you want to search by</span>
-                    <Select filterOption={createFilter({ ignoreAccents: false })} onChange={handleName} styles={customStyles} autoFocus={true} className={styles.dropdown} options={type.value === "Genres" ? genre_list : type.value === "Movie Name" ? movie_list : type.value === "Director" ? director_list : character_list} />
+                    {/* <Select filterOption={createFilter({ ignoreAccents: false })} onChange={handleName} styles={customStyles} autoFocus={true} className={styles.dropdown} options={type.value === "Genres" ? genre_list : type.value === "Movie Name" ? movie_list : type.value === "Director" ? director_list : character_list} /> */}
+                    {/* <Select filterOption={createFilter({ ignoreAccents: false })} onChange={handleName} styles={customStyles} autoFocus={true} className={styles.dropdown} options={type.value === "Genres" ? genre_list : movie_list} /> */}
+                    <Select filterOption={createFilter({ ignoreAccents: false })} onChange={handleName} styles={customStyles} autoFocus={true} className={styles.dropdown} options={movie_list} />
                     <button onClick={handleRecommend} className={styles.startRoomButton}>
                         <span>Recommend</span>
                     </button>
